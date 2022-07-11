@@ -4,10 +4,7 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.extra.ftp.FtpException;
 import com.xj.tools.utils.ArrayUtils;
 import com.xj.tools.utils.StringUtils;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPFileFilter;
-import org.apache.commons.net.ftp.FTPReply;
+import org.apache.commons.net.ftp.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -332,16 +329,25 @@ public class Ftp extends AbstractFtp {
         return ArrayUtil.isNotEmpty(ftpFileArr);
     }
 
-
     @Override
     public boolean delFile(String filePath) {
         final String pwd = pwd();
+        boolean isSuccess;
         try {
-            client.mlistFile(filePath);
+            FTPFile ftpFile = client.mlistFile(filePath);
+            if (ftpFile == null){
+                return false;
+            }
+            if (ftpFile.isDirectory()){
+                return false;
+            }
+            isSuccess =  client.deleteFile(filePath);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new FtpExcetion(e);
+        } finally {
+            cd(pwd);
         }
-        return false;
+        return isSuccess;
     }
 
     @Override
